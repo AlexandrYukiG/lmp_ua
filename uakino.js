@@ -7,7 +7,7 @@
         type: 'video',
         version: '1.0.0',
         name: 'Uakino.best',
-        description: 'Відтворення з uakino.best',
+        description: 'Тестування відтворення з uakino.best',
         component: 'uakino'
     };
 
@@ -22,40 +22,11 @@
             name: 'Uakino.best',
             priority: 10,
             play: function (data, callback) {
-                var movieUrl = 'https://uakino.best/search?query=' + encodeURIComponent(data.title || data.movie.title);
-                var proxy = 'https://cors-anywhere.herokuapp.com/';
-                var requestUrl = proxy + movieUrl;
-
-                Lampa.Network.timeout(10000);
-                Lampa.Network.silent(requestUrl, function (response) {
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(response, 'text/html');
-
-                    // Спроба знайти <iframe> або <video>
-                    var iframeSrc = doc.querySelector('iframe')?.src || '';
-                    if (iframeSrc) {
-                        Lampa.Network.silent(proxy + iframeSrc, function (iframeResponse) {
-                            var iframeDoc = parser.parseFromString(iframeResponse, 'text/html');
-                            var videoSource = iframeDoc.querySelector('video source')?.src || iframeDoc.querySelector('iframe')?.src || '';
-
-                            if (videoSource) {
-                                callback({
-                                    sources: [{ url: videoSource, quality: 'auto', name: 'Uakino.best' }],
-                                    title: data.title || data.movie.title
-                                });
-                            } else {
-                                callback(null); // Не знайдено джерело
-                            }
-                        }, function () {
-                            callback(null); // Помилка при запиті до iframe
-                        });
-                    } else {
-                        callback(null); // Не знайдено ні video, ні iframe
-                    }
-                }, function () {
-                    callback(null); // Помилка основного запиту
-                }, false, {
-                    headers: { 'User-Agent': 'Mozilla/5.0 (Tizen; Smart TV) AppleWebKit/537.36' }
+                // Тестове джерело для перевірки
+                var testUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
+                callback({
+                    sources: [{ url: testUrl, quality: 'auto', name: 'Uakino.best Test' }],
+                    title: data.title || data.movie.title || 'Тестовий потік'
                 });
             }
         });

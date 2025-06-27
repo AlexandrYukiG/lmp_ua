@@ -30,18 +30,31 @@
                 Lampa.Network.silent(requestUrl, function (response) {
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(response, 'text/html');
-                    var videoSource = doc.querySelector('video source')?.src || doc.querySelector('iframe')?.src || '';
 
-                    if (videoSource) {
-                        callback({
-                            sources: [{ url: videoSource, quality: 'auto', name: 'Uakino.best' }],
-                            title: data.title || data.movie.title
+                    // Спроба знайти <iframe>, який може містити джерело
+                    var iframeSrc = doc.querySelector('iframe')?.src || '';
+                    if (iframeSrc) {
+                        // Якщо знайдено iframe, робимо додатковий запит
+                        Lampa.Network.silent(proxy + iframeSrc, function (iframeResponse) {
+                            var iframeDoc = parser.parseFromString(iframeResponse, 'text/html');
+                            var videoSource = iframeDoc.querySelector('video source')?.src || iframeDoc.querySelector('iframe')?.src || '';
+
+                            if (videoSource) {
+                                callback({
+                                    sources: [{ url: videoSource, quality: 'auto', name: 'Uakino.best' }],
+                                    title: data.title || data.movie.title
+                                });
+                            } else {
+                                callback(null); // Не знайдено джерело
+                            }
+                        }, function () {
+                            callback(null); // Помилка при запиті до iframe
                         });
                     } else {
-                        callback(null); // Без повідомлення, щоб уникнути зайвих помилок
+                        callback(null); // Не знайдено ні video, ні iframe
                     }
                 }, function () {
-                    callback(null); // Без повідомлення, щоб уникнути зайвих помилок
+                    callback(null); // Помилка основного запиту
                 }, false, {
                     headers: { 'User-Agent': 'Mozilla/5.0 (Tizen; Smart TV) AppleWebKit/537.36' }
                 });

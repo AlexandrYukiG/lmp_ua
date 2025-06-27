@@ -31,10 +31,9 @@
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(response, 'text/html');
 
-                    // Спроба знайти <iframe>, який може містити джерело
+                    // Спроба знайти <iframe> або <video>
                     var iframeSrc = doc.querySelector('iframe')?.src || '';
                     if (iframeSrc) {
-                        // Якщо знайдено iframe, робимо додатковий запит
                         Lampa.Network.silent(proxy + iframeSrc, function (iframeResponse) {
                             var iframeDoc = parser.parseFromString(iframeResponse, 'text/html');
                             var videoSource = iframeDoc.querySelector('video source')?.src || iframeDoc.querySelector('iframe')?.src || '';
@@ -58,6 +57,32 @@
                 }, false, {
                     headers: { 'User-Agent': 'Mozilla/5.0 (Tizen; Smart TV) AppleWebKit/537.36' }
                 });
+            }
+        });
+
+        // Додаємо кнопку "Дивитись на Uakino.best"
+        var button = `
+            <div class="full-start__button selector view--online">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <span>Дивитись на Uakino.best</span>
+            </div>
+        `;
+
+        Lampa.Listener.follow('full', function (e) {
+            if (e.type == 'complite') {
+                var btn = $(Lampa.Lang.translate(button));
+                btn.on('hover:enter', function () {
+                    Lampa.Activity.push({
+                        url: 'https://uakino.best/search?query=' + encodeURIComponent(e.data.movie.title),
+                        title: 'Uakino.best - ' + e.data.movie.title,
+                        component: 'uakino',
+                        movie: e.data.movie,
+                        page: 1
+                    });
+                });
+                e.object.activity.render().find('.view--torrent').after(btn);
             }
         });
     }
